@@ -37,6 +37,60 @@ void renderFEMMesh( Mesh *_mesh, double _max_mises_stress )
 	Vec3d color;
 	unsigned int i,j,k;
 	//[TODO3]描画処理の書き写し
+	//ノードの描画
+	glPointSize(10);
+	glBegin(GL_POINTS);
+	for (i = 0; i < _mesh->num_node; i++) {
+		//頂点の状態に応じて色を変える
+		switch (_mesh->node[i].state) {
+			case NODE_FREE:
+				glColor3d(0, 1, 1);
+				break;
+			case NODE_FIXED:
+				glColor3d(1, 0, 1);
+				break;
+			case NODE_DEFORM:
+				glColor3d(1, 1, 0);
+				break;
+		}
+		//頂点の座標を指定
+		glVertex3dv(_mesh->node[i].new_position.X);
+	}
+	glEnd();
+
+	//ノード間ラインの描画(変形前・変形後)
+	for (i = 0; i < _mesh->num_tetrahedra; i++) {
+		for (j = 0; j < 4; j++) {
+			for (k = 0; k < j; k++) {
+				glLineWidth(0.5);
+				glColor3d(0.3, 0.3, 0.3);
+				glBegin(GL_LINE_STRIP);
+				glVertex3dv(_mesh->tetrahedra[i].position[j].X);
+				glVertex3dv(_mesh->tetrahedra[i].position[k].X);
+				glEnd();
+				glLineWidth(1);
+				glColor3d(0, 0, 0);
+				glBegin(GL_LINE_STRIP);
+				glVertex3dv(_mesh->tetrahedra[i].new_position[j].X);
+				glVertex3dv(_mesh->tetrahedra[i].new_position[k].X);
+				glEnd();
+			}
+		}
+	}
+//要素ポリゴンの描画
+glColor3d(0, 0, 1);
+for (i = 0; i < _mesh->num_tetrahedra; i++) {
+calColorMap(_mesh->tetrahedra[i].mises_stress / _max_mises_stress, &color);
+for (j = 0; j < 4; j++) {
+glColor3dv(color.X);
+glBegin(GL_TRIANGLES);
+glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 0) % 4].X);
+glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 1) % 4].X);
+glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 2) % 4].X);
+glEnd();
+}
+}
+
 }
 
 float getDepth( int _pos_window_x, int _pos_window_y )
