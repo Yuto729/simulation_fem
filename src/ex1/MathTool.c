@@ -63,7 +63,10 @@ void releaseVecN( VecNd *_A )
 void sumVec3andVec3( Vec3d *_A, Vec3d *_B, Vec3d *_dst )
 {
 	unsigned int i;
-	//[TODO1]_dstに_A+_Bの結果を格納する 
+	//[TODO1]_dstに_A+_Bの結果を格納する
+	_dst->x = _A->x + _B->x;
+	_dst->y = _A->y + _B->y;
+	_dst->z = _A->z + _B->z;
 }
 
 void sumVecNandVecN( VecNd *_A, VecNd *_B, VecNd *_dst )
@@ -75,13 +78,19 @@ void sumVecNandVecN( VecNd *_A, VecNd *_B, VecNd *_dst )
 			setVecNDim( _dst, _A->dim );
 		}
 		//[TODO1]_dstに_A+_Bの結果を格納する 
+		for(i = 0; i < _A->dim; i++){
+			_dst->X[i] = _A->X[i] + _B->X[i];
+		}
 	}
 }
 
 void subVec3andVec3( Vec3d *_A, Vec3d *_B, Vec3d *_dst )
 {
 	unsigned int i;
-	//[TODO1]_dstに_A-_Bの結果を格納する 
+	//[TODO1]_dstに_A-_Bの結果を格納する
+	_dst->x = _A->x - _B->x;
+	_dst->y = _A->y - _B->y;
+	_dst->z = _A->z - _B->z;
 }
 
 void subVecNandVecN( VecNd *_A, VecNd *_B, VecNd *_dst )
@@ -92,14 +101,20 @@ void subVecNandVecN( VecNd *_A, VecNd *_B, VecNd *_dst )
 			initVecN( _dst );
 			setVecNDim( _dst, _A->dim );
 		}
-		//[TODO1]_dstに_A-_Bの結果を格納する 
+		//[TODO1]_dstに_A-_Bの結果を格納する
+		for(i = 0; i < _A->dim; i++){
+			_dst->X[i] = _A->X[i] - _B->X[i];
+		}
 	}
 }
 
 void scalingVec3( double _s, Vec3d *_A, Vec3d *_dst )
 {
 	unsigned int i;
-	//[TODO1]_dstに_s*_Aの結果を格納する 
+	//[TODO1]_dstに_s*_Aの結果を格納する
+	_dst->x = _s * _A->x;
+	_dst->y = _s * _A->y;
+	_dst->z = _s * _A->z;
 }
 
 void scalingVecN( double _s, VecNd *_A, VecNd *_dst )
@@ -109,7 +124,10 @@ void scalingVecN( double _s, VecNd *_A, VecNd *_dst )
 		initVecN( _dst );
 		setVecNDim( _dst, _A->dim );
 	}
-	//[TODO1]_dstに_s*_Aの結果を格納する 
+	//[TODO1]_dstに_s*_Aの結果を格納する
+	for(i = 0; i < _A->dim; i++){
+		_dst->X[i] = _s * _A->X[i];
+	}
 }
 
 void normalizeVec3( Vec3d *_A, Vec3d *_dst )
@@ -155,6 +173,9 @@ double dotVecNandVecN( VecNd *_A, VecNd *_B )
 void crossVec3andVec3(Vec3d *_A, Vec3d *_B, Vec3d *_dst)
 {
 	//[TODO1]_dstに_A×_B(3次元ベクトルの外積)の結果を格納する 
+	_dst->x = _A->y * _B->z - _A->z * _B->y;
+	_dst->y = _A->z * _B->x - _A->x * _B->z;
+	_dst->z = _A->x * _B->y - _A->y * _B->x;
 }
 
 double absVec3( Vec3d *_A )
@@ -316,6 +337,13 @@ void multiMatandMat( Matd *_A, Matd *_B, Matd *_dst )
 
 		//[TODO1]_dstに_A*_B（行列同士の積）の結果を格納する 
 		//_A->X[ _A->ncol * i + j ]と書くと，i行j列の要素にアクセスできる
+		for(i = 0; i < _A->nrow; i++){
+			for(j = 0; j < _B->ncol; j++){
+				for(k = 0; k < _A->ncol; k++){
+					_dst->X[ _B->ncol * i + j ] += _A->X[ _A->ncol * i + k ] * _B->X[ _B->ncol * k + j ];
+				}
+			}
+		}
 	}
 }
 
@@ -330,6 +358,11 @@ void multiMatandVec3( Matd *_A, Vec3d *_B, VecNd *_dst )
 		clearVecN( _dst );
 
 		//[TODO1]_dstに_A*_B（行列と3次元ベクトルの積）の結果を格納する 
+		for(i = 0; i < _A->nrow; i++){
+			for(j = 0; j < 3; j++){
+				_dst->X[i] += _A->X[ _A->ncol * i + j ] * _B->X[j];
+			}
+		}
 	}
 }
 
@@ -344,6 +377,11 @@ void multiMatandVecN( Matd *_A, VecNd *_B, VecNd *_dst )
 		clearVecN( _dst );
 
 		//[TODO1]_dstに_A*_B（行列とN次元ベクトルの積）の結果を格納する 
+		for(i = 0; i < _A->nrow; i++){
+			for(j = 0; j < _A->ncol; j++){
+				_dst->X[i] += _A->X[ _A->ncol * i + j ] * _B->X[j];
+			}
+		}
 	}
 }
 
