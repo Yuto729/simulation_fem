@@ -77,19 +77,19 @@ void renderFEMMesh( Mesh *_mesh, double _max_mises_stress )
 			}
 		}
 	}
-//要素ポリゴンの描画
-glColor3d(0, 0, 1);
-for (i = 0; i < _mesh->num_tetrahedra; i++) {
-calColorMap(_mesh->tetrahedra[i].mises_stress / _max_mises_stress, &color);
-for (j = 0; j < 4; j++) {
-glColor3dv(color.X);
-glBegin(GL_TRIANGLES);
-glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 0) % 4].X);
-glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 1) % 4].X);
-glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 2) % 4].X);
-glEnd();
-}
-}
+	//要素ポリゴンの描画
+	glColor3d(0, 0, 1);
+	for (i = 0; i < _mesh->num_tetrahedra; i++) {
+		calColorMap(_mesh->tetrahedra[i].mises_stress / _max_mises_stress, &color);
+		for (j = 0; j < 4; j++) {
+			glColor3dv(color.X);
+			glBegin(GL_TRIANGLES);
+			glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 0) % 4].X);
+			glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 1) % 4].X);
+			glVertex3dv(_mesh->tetrahedra[i].new_position[(j + 2) % 4].X);
+			glEnd();
+		}
+	}
 
 }
 
