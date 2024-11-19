@@ -181,6 +181,7 @@ void setTotalStiffnessMatrix( Mesh *_mesh )
 		setStiffnessMatrix( &_mesh->tetrahedra[ i ] );
 	
 		//[TODO4]要素行列_mesh->tetrahedra[ i ].Kを足し込み，全体剛性行列_mesh->Kを生成する
+		sumMatandMat(&_mesh->K, &_mesh->tetrahedra[i].K, &_mesh->K);
 		
 	}
 }
