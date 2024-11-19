@@ -31,18 +31,29 @@ void calStrain( Tetrahedra *_tetrahedra )
 {
 	//[TODO2]_tetrahedra->Bと_tetrahedra->deformationから_tetrahedra->strainを計算する
 	//ヒント：行列とベクトルの積には関数multiMatandVecNを使用する
+	multiMatandVecN(&_tetrahedra->B, &_tetrahedra->deformation, &_tetrahedra->strain);
 }
 
 void calStress( Tetrahedra *_tetrahedra )
 {
 	calStrain( _tetrahedra );
 	//[TODO2]_tetrahedra->Dと_tetrahedra->strainから_tetrahedra->stressを計算する
+	multiMatandVecN(&_tetrahedra->D, &_tetrahedra->strain, &_tetrahedra->stress);
 }
 
 double calMisesStress( Tetrahedra *_tetrahedra )
 {
 	calStress( _tetrahedra );
 	//[TODO5]_tetrahedra->mises_stressにミーゼス応力の計算結果を格納する
+	double sigma_x = _tetrahedra->stress.X[0]; // σxx
+	double sigma_y = _tetrahedra->stress.X[1]; // σyy
+	double sigma_z = _tetrahedra->stress.X[2]; // σzz
+	double tau_xy = _tetrahedra->stress.X[3]; // τxy
+	double tau_xz = _tetrahedra->stress.X[4]; // τyz
+	double tau_yz = _tetrahedra->stress.X[5]; // τzx
+	
+	_tetrahedra->mises_stress = sqrt(0.5 * ((sigma_x-sigma_y)*(sigma_x-sigma_y) + (sigma_y-sigma_z)*(sigma_y-sigma_z) + (sigma_z-sigma_x)*(sigma_z-sigma_x) + 
+									6.0 * (tau_xy*tau_xy + tau_xz*tau_xz + tau_yz*tau_yz)));
 	return _tetrahedra->mises_stress;
 }
 
@@ -58,7 +69,7 @@ double calVolume( Tetrahedra *_tetrahedra)
 
 void setStrainDeformationMatrix( Tetrahedra *_tetrahedra )
 {
-	unsigned int i,j;
+	unsigned int i;
 	Matd A;
 	Matd invA;
 	initMat( &A );
@@ -66,10 +77,47 @@ void setStrainDeformationMatrix( Tetrahedra *_tetrahedra )
 	calVolume( _tetrahedra );
 	setGeometoryMatrix( _tetrahedra, &A );
 	invMat( &A, &invA );
-
 	//[TODO2]invAから_tetrahedra->dNを設定する
 
 	//[TODO2]_tetrahedra->dNから_tetrahedra->Bを設定する
+
+	// dNの設定 (3×4行列)
+	setMatDim(&_tetrahedra->dN, 4, 3);
+	clearMat(&_tetrahedra->dN);
+	
+	for(i = 0; i < 4; i++) {
+		// 形状関数の偏微分を設定
+		_tetrahedra->dN.X[4*0 + i] = invA.X[4*1 + i];  // ∂N/∂x
+		_tetrahedra->dN.X[4*1 + i] = invA.X[4*2 + i];  // ∂N/∂y
+		_tetrahedra->dN.X[4*2 + i] = invA.X[4*3 + i];  // ∂N/∂z
+	}
+
+	// B行列の設定 (6×12行列)
+	setMatDim(&_tetrahedra->B, 12, 6);
+	clearMat(&_tetrahedra->B);
+	
+	for(i = 0; i < 4; i++) {
+		// εxx = ∂u/∂x
+		_tetrahedra->B.X[12*0 + 3*i + 0] = _tetrahedra->dN.X[4*0 + i];
+		
+		// εyy = ∂v/∂y
+		_tetrahedra->B.X[12*1 + 3*i + 1] = _tetrahedra->dN.X[4*1 + i];
+		
+		// εzz = ∂w/∂z
+		_tetrahedra->B.X[12*2 + 3*i + 2] = _tetrahedra->dN.X[4*2 + i];
+		
+		// γxy = ∂u/∂y + ∂v/∂x
+		_tetrahedra->B.X[12*3 + 3*i + 0] = _tetrahedra->dN.X[4*1 + i];  // ∂u/∂y
+		_tetrahedra->B.X[12*3 + 3*i + 1] = _tetrahedra->dN.X[4*0 + i];  // ∂v/∂x
+		
+		// γyz = ∂v/∂z + ∂w/∂y
+		_tetrahedra->B.X[12*4 + 3*i + 1] = _tetrahedra->dN.X[4*2 + i];  // ∂v/∂z
+		_tetrahedra->B.X[12*4 + 3*i + 2] = _tetrahedra->dN.X[4*1 + i];  // ∂w/∂y
+		
+		// γzx = ∂w/∂x + ∂u/∂z
+		_tetrahedra->B.X[12*5 + 3*i + 2] = _tetrahedra->dN.X[4*0 + i];  // ∂w/∂x
+		_tetrahedra->B.X[12*5 + 3*i + 0] = _tetrahedra->dN.X[4*2 + i];  // ∂u/∂z
+	}
 
 	releaseMat( &A );
 	releaseMat( &invA );
@@ -83,24 +131,43 @@ void setStressStrainMatrix( Tetrahedra *_tetrahedra )
 		( ( 1.0 + _tetrahedra->poisson_ratio ) * ( 1.0 - 2.0 * _tetrahedra->poisson_ratio ) );
 
 	//[TODO2]行列_tetrahedra->Dを設定する
+	setMatDim(&_tetrahedra->D, 6, 6);
+	clearMat(&_tetrahedra->D);
+	
+	// 対角成分
+	// 対角成分
+	_tetrahedra->D.X[0] = Dscale * (1.0 - _tetrahedra->poisson_ratio);
+	_tetrahedra->D.X[7] = Dscale * (1.0 - _tetrahedra->poisson_ratio);
+	_tetrahedra->D.X[14] = Dscale * (1.0 - _tetrahedra->poisson_ratio);
+	_tetrahedra->D.X[21] = Dscale * (1.0 - 2.0*_tetrahedra->poisson_ratio) / 2.0;
+	_tetrahedra->D.X[28] = Dscale * (1.0 - 2.0*_tetrahedra->poisson_ratio) / 2.0;
+	_tetrahedra->D.X[35] = Dscale * (1.0 - 2.0*_tetrahedra->poisson_ratio) / 2.0;
+	
+	// 非対角成分
+	_tetrahedra->D.X[1] = Dscale * _tetrahedra->poisson_ratio;
+	_tetrahedra->D.X[2] = Dscale * _tetrahedra->poisson_ratio;
+	_tetrahedra->D.X[6] = Dscale * _tetrahedra->poisson_ratio;
+	_tetrahedra->D.X[8] = Dscale * _tetrahedra->poisson_ratio;
+	_tetrahedra->D.X[12] = Dscale * _tetrahedra->poisson_ratio;
+	_tetrahedra->D.X[13] = Dscale * _tetrahedra->poisson_ratio;
 }
 
 void setStiffnessMatrix( Tetrahedra *_tetrahedra )
 {
-	//V, B, Dを使って要素のKを設定する
-	Matd trB;
-	Matd temp1;
-	Matd temp2;
-	initMat( &trB );
-	initMat( &temp1 );
-	initMat( &temp2 );
-	trMat( &_tetrahedra->B, &trB );
+	Matd trB, temp1, temp2;
+	initMat(&trB);
+	initMat(&temp1);
+	initMat(&temp2);
 
-	//[TODO2]_tetrahedra->B, _tetrahedra->volume, trB, _tetrahedra->Dを用いて_tetrahedra->Kを設定する
+	// B^T * D * B * V の順で計算
+	trMat(&_tetrahedra->B, &trB);
+	multiMatandMat(&trB, &_tetrahedra->D, &temp1);
+	multiMatandMat(&temp1, &_tetrahedra->B, &temp2);
+	scalingMat(_tetrahedra->volume, &temp2, &_tetrahedra->K);
 
-	releaseMat( &trB );
-	releaseMat( &temp1 );
-	releaseMat( &temp2 );
+	releaseMat(&trB);
+	releaseMat(&temp1);
+	releaseMat(&temp2);
 }
 
 void setTotalStiffnessMatrix( Mesh *_mesh )
@@ -301,7 +368,25 @@ int saveDF( Mesh *_mesh, const char *_filename )
 	//全体変位ベクトル_mesh->deformationと全体剛性行列_mesh->Kから全体力ベクトル_mesh->forceを計算
 	//ファイルfileに節点番号，節点3次元座標，節点3次元変位，節点3次元力を出力する
 
-	fclose( file );
+	// 全体力ベクトルの計算
+	multiMatandVecN(&_mesh->K, &_mesh->deformation, &_mesh->force);
+	
+	// 結果の出力
+	for(i = 0; i < _mesh->num_node; i++) {
+		fprintf(file, "%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+				i,
+				_mesh->node[i].position.X[0],
+				_mesh->node[i].position.X[1],
+				_mesh->node[i].position.X[2],
+				_mesh->deformation.X[3*i],
+				_mesh->deformation.X[3*i+1],
+				_mesh->deformation.X[3*i+2],
+				_mesh->force.X[3*i],
+				_mesh->force.X[3*i+1],
+				_mesh->force.X[3*i+2]);
+	}
+	
+	fclose(file);
 	return 1;
 }
 
