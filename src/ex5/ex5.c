@@ -252,6 +252,7 @@ int main( int _argc, char *_argv[] )
 	char filename[256];
 	char title[256];
 	double current_time, last_time;
+	Tetrahedra *tetrahedra;
 
 	//メッシュデータのロード
 	if(_argc>1)//コマンドライン入力の場合
@@ -275,8 +276,36 @@ int main( int _argc, char *_argv[] )
 	setTotalStiffnessMatrix( &mesh );
 
 	//[TODO5ヒント]
-	//固定境界を設定するにはmesh.node[ #ID ].state = NODE_FIXED;
-	//変位境界を設定するにはmesh.node[ #ID ].state = NODE_DEFORM;
+	// 固定境界条件の設定
+	mesh.node[253].state = NODE_FIXED;
+	mesh.node[330].state = NODE_FIXED;
+	mesh.node[332].state = NODE_FIXED;
+	mesh.node[333].state = NODE_FIXED;
+	mesh.node[342].state = NODE_FIXED;
+	setFixRegion( &mesh );
+
+	// 前処理行列の計算
+	printf("Pre matrix calculation ....");
+	calPreMatrix( &mesh );
+	printf("[OK]\n");
+
+	// 変位境界条件の設定
+	mesh.node[19].state = NODE_DEFORM;
+	setDeformRegion( &mesh );
+
+	// 変位条件の設定
+	Vec3d deformation = {5.0, 5.0, 5.0};
+	setDeformCondition(&mesh, &deformation);
+
+	// 剛性方程式を解く
+	solveStiffnessEquation(&mesh);
+
+	// 全体のミーゼス応力の最大値を計算
+	double max_mises = calTotalMisessStress(&mesh);
+	printf("Maximum Mises stress: %f\n", max_mises);
+	setVec3(&pos, 0.0, 10.0, 0.0);
+	double ms_at = getMisessStressAt(&mesh, pos);
+	printf("Mises stress at (%f,%f,%f): %f\n", pos.X[0], pos.X[1], pos.X[2], ms_at);
 
 	//初期ウィンドウサイズの初期化
 	width = WINDOW_SIZE_X;
