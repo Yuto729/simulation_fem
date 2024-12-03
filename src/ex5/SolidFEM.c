@@ -80,6 +80,7 @@ void setStrainDeformationMatrix( Tetrahedra *_tetrahedra )
 	//[TODO2]invAから_tetrahedra->dNを設定する
 
 	//[TODO2]_tetrahedra->dNから_tetrahedra->Bを設定する
+
 	// dNの設定 (3×4行列)
 	setMatDim(&_tetrahedra->dN, 4, 3);
 	clearMat(&_tetrahedra->dN);
@@ -180,6 +181,7 @@ void setTotalStiffnessMatrix( Mesh *_mesh )
 		setStiffnessMatrix( &_mesh->tetrahedra[ i ] );
 	
 		//[TODO4]要素行列_mesh->tetrahedra[ i ].Kを足し込み，全体剛性行列_mesh->Kを生成する
+		sumMatandMat(&_mesh->K, &_mesh->tetrahedra[i].K, &_mesh->K);
 		
 	}
 }
