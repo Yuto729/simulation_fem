@@ -195,7 +195,7 @@ void glMotion( int _x, int _y)
 
 				//[TODO5ヒント]
 				//指定した座標のミーゼス応力を取得
-				setVec3( &pos, 0, 0, 0 );
+				setVec3( &pos, 0, 10, 0 );
 				ms_at = getMisessStressAt( &mesh, pos );
 				//結果をコンソールに表示
 				printf( "Max MS = %3.3f, MS at (%2.1f, %2.1f, %2.1f)= %3.3f\r", output, pos.x, pos.y, pos.z, ms_at);
