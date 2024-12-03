@@ -171,19 +171,31 @@ void setStiffnessMatrix( Tetrahedra *_tetrahedra )
 }
 
 void setTotalStiffnessMatrix( Mesh *_mesh )
+// TODO4
 {
-	unsigned int i, j, k, l, m;
-	unsigned int col, row;
-	clearMat(& _mesh->K );
-	for( i = 0; i<_mesh->num_tetrahedra; i ++ ){
-		setStrainDeformationMatrix( &_mesh->tetrahedra[ i ] );
-		setStressStrainMatrix( &_mesh->tetrahedra[ i ] );
-		setStiffnessMatrix( &_mesh->tetrahedra[ i ] );
-	
-		//[TODO4]要素行列_mesh->tetrahedra[ i ].Kを足し込み，全体剛性行列_mesh->Kを生成する
-		sumMatandMat(&_mesh->K, &_mesh->tetrahedra[i].K, &_mesh->K);
-		
-	}
+    unsigned int i, j, k, l, m;
+    unsigned int col, row;
+    clearMat(&_mesh->K); 
+
+    for (i = 0; i < _mesh->num_tetrahedra; i++) {
+        setStrainDeformationMatrix(&_mesh->tetrahedra[i]);
+        setStressStrainMatrix(&_mesh->tetrahedra[i]);
+        setStiffnessMatrix(&_mesh->tetrahedra[i]);
+
+        for (j = 0; j < 4; j++) { 
+            for (k = 0; k < 4; k++) {
+                for (l = 0; l < 3; l++) { 
+                    for (m = 0; m < 3; m++) {
+                        row = 3 * _mesh->tetrahedra[i].node_index[j] + l;
+                        col = 3 * _mesh->tetrahedra[i].node_index[k] + m;
+
+                        _mesh->K.X[_mesh->K.ncol * row + col] +=
+                            _mesh->tetrahedra[i].K.X[12 * (3 * j + l) + (3 * k + m)];
+                    }
+                }
+            }
+        }
+    }
 }
 
 void setFixRegion( Mesh *_mesh )
@@ -243,7 +255,6 @@ void setDeformRegion( Mesh *_mesh )
 				break;
 		}
 	}
-	//行列・ベクトルの次元が決まる
 	if( _mesh->num_Sd > 0 && _mesh->num_Sn > 0 ){
 		setMatDim( &_mesh->Ldd, _mesh->num_Sd * 3, _mesh->num_Sd * 3 );
 		setMatDim( &_mesh->Lnd, _mesh->num_Sd * 3, _mesh->num_Sn * 3 );
@@ -252,9 +263,9 @@ void setDeformRegion( Mesh *_mesh )
 		setVecNDim( &_mesh->Fd, _mesh->num_Sd * 3);
 		setVecNDim( &_mesh->Fn, _mesh->num_Sn * 3);
 
-		for( i = 0; i < _mesh->num_Sd; i ++ ){//並び替えた後の順序
-			for( j = 0; j < _mesh->num_Sd; j ++ ){//並び替えた後の順序
-				for( k = 0; k < 3; k++ ){//自由度
+		for( i = 0; i < _mesh->num_Sd; i ++ ){
+			for( j = 0; j < _mesh->num_Sd; j ++ ){
+				for( k = 0; k < 3; k++ ){
 					col = 3 * _mesh->Sd[ j ];
 					row = 3 * _mesh->Sd[ i ] + k;
 					memcpy( &_mesh->Ldd.X[ _mesh->num_Sd * 3 *( 3 * i + k ) + 3 * j ],
@@ -263,9 +274,9 @@ void setDeformRegion( Mesh *_mesh )
 				}
 			}
 		}
-		for( i = 0; i < _mesh->num_Sn; i ++ ){//並び替えた後の順序
-			for( j = 0; j < _mesh->num_Sd; j ++ ){//並び替えた後の順序
-				for( k = 0; k < 3; k++ ){//自由度
+		for( i = 0; i < _mesh->num_Sn; i ++ ){
+			for( j = 0; j < _mesh->num_Sd; j ++ ){
+				for( k = 0; k < 3; k++ ){
 					col = 3 * _mesh->Sd[ j ];
 					row = 3 * _mesh->Sn[ i ] + k;
 					memcpy( &_mesh->Lnd.X[ _mesh->num_Sd * 3 *( 3 * i + k ) + 3 * j ],
