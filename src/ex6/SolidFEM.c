@@ -171,19 +171,31 @@ void setStiffnessMatrix( Tetrahedra *_tetrahedra )
 }
 
 void setTotalStiffnessMatrix( Mesh *_mesh )
+// TODO4
 {
-	unsigned int i, j, k, l, m;
-	unsigned int col, row;
-	clearMat(& _mesh->K );
-	for( i = 0; i<_mesh->num_tetrahedra; i ++ ){
-		setStrainDeformationMatrix( &_mesh->tetrahedra[ i ] );
-		setStressStrainMatrix( &_mesh->tetrahedra[ i ] );
-		setStiffnessMatrix( &_mesh->tetrahedra[ i ] );
-	
-		//[TODO4]要素行列_mesh->tetrahedra[ i ].Kを足し込み，全体剛性行列_mesh->Kを生成する
-		sumMatandMat(&_mesh->K, &_mesh->tetrahedra[i].K, &_mesh->K);
-		
-	}
+    unsigned int i, j, k, l, m;
+    unsigned int col, row;
+    clearMat(&_mesh->K); 
+
+    for (i = 0; i < _mesh->num_tetrahedra; i++) {
+        setStrainDeformationMatrix(&_mesh->tetrahedra[i]);
+        setStressStrainMatrix(&_mesh->tetrahedra[i]);
+        setStiffnessMatrix(&_mesh->tetrahedra[i]);
+
+        for (j = 0; j < 4; j++) { 
+            for (k = 0; k < 4; k++) {
+                for (l = 0; l < 3; l++) { 
+                    for (m = 0; m < 3; m++) {
+                        row = 3 * _mesh->tetrahedra[i].node_index[j] + l;
+                        col = 3 * _mesh->tetrahedra[i].node_index[k] + m;
+
+                        _mesh->K.X[_mesh->K.ncol * row + col] +=
+                            _mesh->tetrahedra[i].K.X[12 * (3 * j + l) + (3 * k + m)];
+                    }
+                }
+            }
+        }
+    }
 }
 
 void setFixRegion( Mesh *_mesh )
