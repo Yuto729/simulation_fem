@@ -381,10 +381,8 @@ int saveDF( Mesh *_mesh, const char *_filename )
 	//全体変位ベクトル_mesh->deformationと全体剛性行列_mesh->Kから全体力ベクトル_mesh->forceを計算
 	//ファイルfileに節点番号，節点3次元座標，節点3次元変位，節点3次元力を出力する
 
-	// 全体力ベクトルの計算
 	multiMatandVecN(&_mesh->K, &_mesh->deformation, &_mesh->force);
 	
-	// 結果の出力
 	for(i = 0; i < _mesh->num_node; i++) {
 		fprintf(file, "%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
 				i,
