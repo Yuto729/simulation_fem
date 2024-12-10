@@ -88,7 +88,7 @@ double dotVec3andVec3(Vec3d *_A, Vec3d *_B);
 double dotVecNandVecN(VecNd *_A, VecNd *_B);
 
 //ベクトルの外積
-void crossVec3andVec3(Vec3d *_A, Vec3d *_B, Vec3d *_dst);
+void crossProductVec3(Vec3d *_A, Vec3d *_B, Vec3d *_dst);
 
 //ベクトルの絶対値
 double absVec3( Vec3d *_A );

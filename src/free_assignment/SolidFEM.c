@@ -114,7 +114,7 @@ void setStrainDeformationMatrix( Tetrahedra *_tetrahedra )
 		_tetrahedra->B.X[12*4 + 3*i + 1] = _tetrahedra->dN.X[4*2 + i];  // ∂v/∂z
 		_tetrahedra->B.X[12*4 + 3*i + 2] = _tetrahedra->dN.X[4*1 + i];  // ∂w/∂y
 		
-		// γzx = ∂w/∂x + ∂u/∂z
+		// γzx = ∂w/∂x + ��u/∂z
 		_tetrahedra->B.X[12*5 + 3*i + 2] = _tetrahedra->dN.X[4*0 + i];  // ∂w/∂x
 		_tetrahedra->B.X[12*5 + 3*i + 0] = _tetrahedra->dN.X[4*2 + i];  // ∂u/∂z
 	}
@@ -418,4 +418,47 @@ void clearDeform( Mesh *_mesh )
 				sizeof( Vec3d ) * 4 );
 		_mesh->tetrahedra[ i ].mises_stress=0;
 	}
+}
+
+void setFailureThreshold(Mesh *_mesh, double _threshold) {
+    _mesh->failure_threshold = _threshold;
+}
+
+void updateFailureStatus(Mesh *_mesh) {
+    int had_new_failure = 0;
+    
+    // 各要素のミーゼス応力を計算し、破壊判定を行う
+    for(unsigned int i = 0; i < _mesh->num_tetrahedra; i++) {
+        if(_mesh->tetrahedra[i].status == 0) {  // まだ破壊していない要素のみチェック
+            calMisesStress(&_mesh->tetrahedra[i]);
+            
+            if(_mesh->tetrahedra[i].mises_stress > _mesh->failure_threshold) {
+                _mesh->tetrahedra[i].status = 1;  // 破壊状態に設定
+                _mesh->tetrahedra[i].young_modulus *= 0.000001;  // 破壊した要素の剛性を100万分の1に低下
+                had_new_failure = 1;
+                _mesh->num_failed_elements++;
+            }
+        }
+    }
+    
+    // 破壊が発生した場合、剛性行列を再計算
+    if(had_new_failure) {
+        setTotalStiffnessMatrix(_mesh);
+        calPreMatrix(_mesh);
+    }
+}
+
+void resetFailureStatus(Mesh *_mesh, double _young_modulus) {
+    for(unsigned int i = 0; i < _mesh->num_tetrahedra; i++) {
+        _mesh->tetrahedra[i].status = 0;
+        _mesh->tetrahedra[i].young_modulus = _young_modulus;  // 元の剛性に戻す
+    }
+    _mesh->num_failed_elements = 0;
+    setTotalStiffnessMatrix(_mesh);
+    calPreMatrix(_mesh);
+}
+
+int isSimulationComplete(Mesh *_mesh) {
+    // 新しい破壊が発生しなくなったら終了
+    return (_mesh->num_failed_elements == 0);
 }

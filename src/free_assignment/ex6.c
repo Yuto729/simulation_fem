@@ -246,6 +246,22 @@ void glKeyboard( unsigned char _key, int _x, int _y )
 				}
 			}
 			break;
+		case 'b': // 破壊シミュレーションの初期化
+			if(mesh.is_boundary_on != 1) {
+				printf("Please set boundary conditions and press 's' key first\n");
+				break;
+			}
+			setFailureThreshold(&mesh, MAX_MS * 0.8);  // 最大応力の80%を閾値に設定
+			resetFailureStatus(&mesh, YOUNGMODULUS);
+			printf("Failure simulation initialized. Threshold set to %f\n", MAX_MS * 0.8);
+			break;
+		case 'p': // 破壊進行の1ステップ実行
+			if(mesh.is_boundary_on == 1) {
+				solveStiffnessEquation(&mesh);  // 現在の状態で方程式を解く
+				updateFailureStatus(&mesh);      // 破壊判定と更新
+				printf("Failure propagation step: %d elements failed\n", mesh.num_failed_elements);
+			}
+			break;
 		default:
 			break;
 	}
@@ -332,7 +348,7 @@ int main( int _argc, char *_argv[] )
 	glInit();
 	glutMainLoop();
 
-	//メッシュの開放
+	//メッシ���の開放
 	releaseMesh( &mesh );
 
 	//座標変換行列の開放

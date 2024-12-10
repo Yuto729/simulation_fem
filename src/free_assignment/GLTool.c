@@ -78,9 +78,20 @@ void renderFEMMesh( Mesh *_mesh, double _max_mises_stress )
 		}
 	}
 	//要素ポリゴンの描画
-	glColor3d(0, 0, 1);
 	for (i = 0; i < _mesh->num_tetrahedra; i++) {
-		calColorMap(_mesh->tetrahedra[i].mises_stress / _max_mises_stress, &color);
+		if (_mesh->tetrahedra[i].status == ELEMENT_FAILED) {
+			// 破壊した要素は黒色で表示
+			color.x = 0.1;
+			color.y = 0.1;
+			color.z = 0.1;
+			
+			// 破壊した要素はワイヤーフレーム表示
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		} else {
+			// 通常の要素はミーゼス応力に応じた色で表示
+			calColorMap(_mesh->tetrahedra[i].mises_stress / _max_mises_stress, &color);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 		for (j = 0; j < 4; j++) {
 			glColor3dv(color.X);
 			glBegin(GL_TRIANGLES);
@@ -90,7 +101,8 @@ void renderFEMMesh( Mesh *_mesh, double _max_mises_stress )
 			glEnd();
 		}
 	}
-
+	// 描画モードを元に戻す
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 float getDepth( int _pos_window_x, int _pos_window_y )
@@ -126,7 +138,7 @@ void convertWindow2World( Vec3d *_position_window, Vec3d *_position_world)
     glGetIntegerv( GL_VIEWPORT, viewport );
     glGetDoublev( GL_MODELVIEW_MATRIX, matrix_modelview );
     glGetDoublev( GL_PROJECTION_MATRIX, matrix_projection );
-	//ウィンドウ座標系からワールド座標系へ変換
+	//ウィンドウ座���系からワールド座標系へ変換
 	gluUnProject( _position_window->x, ( double )viewport[ 3 ]-_position_window->y, _position_window->z,
 				matrix_modelview, matrix_projection, viewport,
 				&_position_world->x, &_position_world->y, &_position_world->z );
@@ -191,4 +203,31 @@ void setMouseRotation( double _x, double _y, Matd *_dst )
 void setMouseScroll( double _s, Matd *_dst)
 {
 	_dst->X[0] = _dst->X[5] = _dst->X[10] = _s;
+}
+
+void renderTetrahedra(Tetrahedra *_tetrahedra) {
+    // 四面体の各面を描画
+    glBegin(GL_TRIANGLES);
+    
+    // 面1: 0-1-2
+    glVertex3dv(_tetrahedra->new_position[0].X);
+    glVertex3dv(_tetrahedra->new_position[1].X);
+    glVertex3dv(_tetrahedra->new_position[2].X);
+    
+    // 面2: 0-1-3
+    glVertex3dv(_tetrahedra->new_position[0].X);
+    glVertex3dv(_tetrahedra->new_position[1].X);
+    glVertex3dv(_tetrahedra->new_position[3].X);
+    
+    // 面3: 0-2-3
+    glVertex3dv(_tetrahedra->new_position[0].X);
+    glVertex3dv(_tetrahedra->new_position[2].X);
+    glVertex3dv(_tetrahedra->new_position[3].X);
+    
+    // 面4: 1-2-3
+    glVertex3dv(_tetrahedra->new_position[1].X);
+    glVertex3dv(_tetrahedra->new_position[2].X);
+    glVertex3dv(_tetrahedra->new_position[3].X);
+    
+    glEnd();
 }

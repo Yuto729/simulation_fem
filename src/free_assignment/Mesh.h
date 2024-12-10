@@ -15,6 +15,12 @@ enum{
 	NODE_DEFORM
 };
 
+// 要素の状態を表す列挙型
+enum ElementStatus {
+    ELEMENT_NORMAL = 0,
+    ELEMENT_FAILED = 1
+};
+
 typedef struct{
 	Vec3d position;
 	Vec3d new_position;
@@ -37,6 +43,7 @@ typedef struct{
 	double mises_stress;
 	VecNd strain;
 	VecNd stress;
+	int status;  // 要素の破壊状態 (0: 正常, 1: 破壊)
 }Tetrahedra;
 
 typedef struct{
@@ -66,6 +73,8 @@ typedef struct{
 	Matd Ls;
 	Matd Ldd;
 	Matd Lnd;
+	double failure_threshold;  // 破壊判定のための閾値
+	int num_failed_elements;   // 破壊した要素の数
 }Mesh;
 
 //要素の初期化

@@ -170,9 +170,7 @@ double dotVecNandVecN( VecNd *_A, VecNd *_B )
 	return dst;
 }
 
-void crossVec3andVec3(Vec3d *_A, Vec3d *_B, Vec3d *_dst)
-{
-	//[TODO1]_dstに_A×_B(3次元ベクトルの外積)の結果を格納する 
+void crossProductVec3(Vec3d *_A, Vec3d *_B, Vec3d *_dst) {
 	_dst->x = _A->y * _B->z - _A->z * _B->y;
 	_dst->y = _A->z * _B->x - _A->x * _B->z;
 	_dst->z = _A->x * _B->y - _A->y * _B->x;

@@ -30,5 +30,7 @@ void renderGrid( double _scale );
 void setMouseRotation( double _x, double _y, Matd *_dst );
 //拡大縮小変換行列の設定
 void setMouseScroll( double _s, Matd *_dst);
+//四面体要素の描画
+void renderTetrahedra(Tetrahedra *_tetrahedra);
 
 #endif

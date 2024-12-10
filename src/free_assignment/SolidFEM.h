@@ -44,4 +44,12 @@ int saveDF( Mesh *_mesh, const char *_filename );
 //変位を初期化する
 void clearDeform( Mesh *_mesh );
 
+// 破壊シミュレーション関連の関数
+void setFailureThreshold(Mesh *_mesh, double _threshold);
+void updateFailureStatus(Mesh *_mesh);
+void resetFailureStatus(Mesh *_mesh, double _young_modulus);
+
+// 破壊判定と処理を行う関数
+void checkAndProcessFailure(Mesh *_mesh, double failure_threshold);
+
 #endif
