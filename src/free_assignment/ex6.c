@@ -180,7 +180,7 @@ void glMotion( int _x, int _y)
 			//ドラッグ開始点と現在のマウスの座標の相対ベクトルを入力とする
 			subVec3andVec3( &pos_dragging, &pos_clicked, &input );
 
-			//境界条件が設定されていればマウスを動かすたびに解析を実行
+			// //境界条件が設定されていればマウスを動かすたびに解析を実行
 			if( mesh.is_boundary_on == 1){
 				//境界条件を設定
 				setDeformCondition( &mesh, &input );
@@ -246,16 +246,16 @@ void glKeyboard( unsigned char _key, int _x, int _y )
 				}
 			}
 			break;
-		case 'b': // 破壊シミュレーションの初期化
+		case 'b':
 			if(mesh.is_boundary_on != 1) {
 				printf("Please set boundary conditions and press 's' key first\n");
 				break;
 			}
-			setFailureThreshold(&mesh, MAX_MS * 0.8);  // 最大応力の80%を閾値に設定
+			setFailureThreshold(&mesh, MAX_MS * 0.8);
 			resetFailureStatus(&mesh, YOUNGMODULUS);
 			printf("Failure simulation initialized. Threshold set to %f\n", MAX_MS * 0.8);
 			break;
-		case 'p': // 破壊進行の1ステップ実行
+		case 'p':
 			if(mesh.is_boundary_on == 1) {
 				solveStiffnessEquation(&mesh);  // 現在の状態で方程式を解く
 				updateFailureStatus(&mesh);      // 破壊判定と更新

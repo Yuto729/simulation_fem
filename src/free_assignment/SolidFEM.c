@@ -434,7 +434,7 @@ void updateFailureStatus(Mesh *_mesh) {
             
             if(_mesh->tetrahedra[i].mises_stress > _mesh->failure_threshold) {
                 _mesh->tetrahedra[i].status = 1;  // 破壊状態に設定
-                _mesh->tetrahedra[i].young_modulus *= 0.000001;  // 破壊した要素の剛性を100万分の1に低下
+                _mesh->tetrahedra[i].young_modulus *= 0.001;
                 had_new_failure = 1;
                 _mesh->num_failed_elements++;
             }
